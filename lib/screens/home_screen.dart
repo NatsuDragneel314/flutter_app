@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../services/cart_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 import 'cart_screen.dart';
+import 'login_screen.dart';
 import 'product_detail_screen.dart';
 import 'favorites_screen.dart';
 
@@ -443,7 +445,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _logout() {
+    AuthService().logout();
+    Navigator.of(context).pushAndRemoveUntil(
+      PageRouteBuilder(
+        pageBuilder: (_, a, __) => const LoginScreen(),
+        transitionsBuilder: (_, a, __, child) =>
+            FadeTransition(opacity: a, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ),
+      (_) => false,
+    );
+  }
+
   Widget _buildProfileTab() {
+    final auth = AuthService();
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -459,20 +475,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     colors: [Color(0xFF6C63FF), Color(0xFF3D5AF1)]),
                 borderRadius: BorderRadius.circular(28),
               ),
-              child: const Center(
-                  child: Text('JD',
-                      style: TextStyle(
+              child: Center(
+                  child: Text(auth.userInitials,
+                      style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
                           fontSize: 28))),
             ),
             const SizedBox(height: 16),
-            const Text('John Doe',
-                style: TextStyle(
+            Text(auth.userName,
+                style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF1A1A2E))),
-            Text('john.doe@email.com',
+            Text(auth.userEmail,
                 style: TextStyle(fontSize: 14, color: Colors.grey[500])),
             const SizedBox(height: 28),
             // Stats row
@@ -488,13 +504,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(height: 24),
             // Menu items
             ...[
-              ('📦', 'My Orders', 'Track your deliveries'),
-              ('💳', 'Payment Methods', 'Cards & wallets'),
-              ('📍', 'Delivery Addresses', 'Manage addresses'),
-              ('🔔', 'Notifications', 'Manage alerts'),
-              ('❓', 'Help & Support', 'FAQs & contact'),
-              ('🚪', 'Log Out', 'See you soon!'),
-            ].map((item) => _profileMenuItem(item.$1, item.$2, item.$3)),
+              ('📦', 'My Orders', 'Track your deliveries', null),
+              ('💳', 'Payment Methods', 'Cards & wallets', null),
+              ('📍', 'Delivery Addresses', 'Manage addresses', null),
+              ('🔔', 'Notifications', 'Manage alerts', null),
+              ('❓', 'Help & Support', 'FAQs & contact', null),
+            ].map((item) =>
+                _profileMenuItem(item.$1, item.$2, item.$3, onTap: item.$4)),
+            _profileMenuItem('🚪', 'Log Out', 'See you soon!',
+                onTap: _logout, isDestructive: true),
           ],
         ),
       ),
@@ -531,7 +549,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _profileMenuItem(String emoji, String title, String sub) {
+  Widget _profileMenuItem(String emoji, String title, String sub,
+      {VoidCallback? onTap, bool isDestructive = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -545,13 +564,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ],
       ),
       child: ListTile(
+        onTap: onTap,
         leading: Text(emoji, style: const TextStyle(fontSize: 22)),
         title: Text(title,
-            style:
-                const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+                color: isDestructive
+                    ? const Color(0xFFFF6B6B)
+                    : const Color(0xFF1A1A2E))),
         subtitle: Text(sub,
             style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-        trailing: Icon(Icons.chevron_right_rounded, color: Colors.grey[400]),
+        trailing: Icon(Icons.chevron_right_rounded,
+            color: isDestructive
+                ? const Color(0xFFFF6B6B).withValues(alpha: 0.5)
+                : Colors.grey[400]),
         shape:
             RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),

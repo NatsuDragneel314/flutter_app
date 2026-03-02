@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -48,9 +50,11 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(milliseconds: 2600), () {
       if (mounted) {
+        final isLoggedIn = AuthService().isLoggedIn;
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, a, __) => const HomeScreen(),
+            pageBuilder: (_, a, __) =>
+                isLoggedIn ? const HomeScreen() : const LoginScreen(),
             transitionsBuilder: (_, a, __, child) =>
                 FadeTransition(opacity: a, child: child),
             transitionDuration: const Duration(milliseconds: 500),
